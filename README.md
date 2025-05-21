@@ -1,20 +1,20 @@
 # WordPress local development with Docker
 
 <h4> 
-Version 1.0.3
-<!-- WPVERSION -->- WordPress 6.2
+Version 1.7.5
+<!-- WPVERSION -->- WordPress 6.8.1
 </h4>
 
 <!-- [![dockeri.co](https://dockeri.co/image/ideasonpurpose/wordpress)](https://hub.docker.com/r/ideasonpurpose/wordpress)<br> -->
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/ideasonpurpose/wordpress)](https://hub.docker.com/r/ideasonpurpose/wordpress)
-[![Push to Docker Hub](https://github.com/ideasonpurpose/docker-wordpress-dev/workflows/Push%20to%20Docker%20Hub/badge.svg)](https://github.com/ideasonpurpose/docker-wordpress-dev)
+[![Docker Pulls](https://img.shields.io/docker/pulls/ideasonpurpose/wordpress?logo=docker&logoColor=white)](https://hub.docker.com/r/ideasonpurpose/wordpress)
+[![Push to DockerHub](https://img.shields.io/github/actions/workflow/status/ideasonpurpose/docker-wordpress-dev/push-to-dockerhub.yml?logo=github&logoColor=white&label=Push%20to%20DockerHub)](https://github.com/ideasonpurpose/docker-wordpress-dev/actions/workflows/push-to-dockerhub.yml)
 
 ## About This Project
 
 This project provides local development environments for fast iteration of existing WordPress websites. This includes pre-configured Docker-based MySQL and PHP servers, our [Docker-Build toolchain][docker-build], [Xdebug](https://xdebug.org/), [ImageMagick](http://www.imagemagick.org/) and a number of helper scripts.
 
-The project builds on the official WordPress docker image, currently **[v6.2](https://hub.docker.com/_/wordpress)**
+The project builds on the official WordPress docker image, currently **[v6.8.1](https://hub.docker.com/_/wordpress)**
 
 ## Getting Started
 
@@ -23,9 +23,11 @@ To update an existing project or start a new one, run the following commands in 
 ##### macOS, Linux & Windows PowerShell
 
 ```
-docker run --rm -it -v ${PWD}:/usr/src/site ideasonpurpose/wordpress:1.0.3 init
+docker run --rm -it -v ${PWD}:/usr/src/site ideasonpurpose/wordpress:6.8.1 init
 ```
+
 Followed by:
+
 ```
 npm run bootstrap
 ```
@@ -35,7 +37,7 @@ _NOTE: If **~/.composer** doesn't exist, mounting the Docker volume will create 
 ##### Windows Command Prompt
 
 ```
-docker run --rm -it -v %cd%:/usr/src/site ideasonpurpose/wordpress:1.0.3 init
+docker run --rm -it -v %cd%:/usr/src/site ideasonpurpose/wordpress:6.8.1 init
 ```
 
 - `init` command copies all the necessary tooling files into place and sets up the default theme directory structure.
@@ -96,11 +98,17 @@ All `*.sql` files from the top-level **\_db** directory will be in alphabetical 
   - **`composer:install`** - Installs packages from the composer.lock file
   - **`composer:require`** - Add new packages and update composer.json
   - **`composer:update`** - Updates composer dependencies to their newest allowable version and rewrites the **composer.lock** file.
-- **`mysql`**<br>
-  Opens a mysql shell to the development WordPress database
-  - **`mysql:dump`**, **`mysqldump`** - Writes a compressed, timestamped database snapshot into the **\_db** directory
-  - **`mysql:reload`** - Drops, then reloads the database from the most recent dumpfile in **\_db** then attempts to activate the development theme.
-- **`phpmyadmin`** - Starts a phpMyAdmin server at [localhost:8002](http://localhost:8002)
+    Opens a mysql shell to the development WordPress database
+- **`db:admin`** - Starts a phpMyAdmin server at [localhost:8002](http://localhost:8002)
+- **`db:dump`** - Writes a compressed, timestamped database snapshot into the **\_db** directory
+- **`db:pull`** - Alias for `pull:db`
+- **`db:reload`** - Drops then reloads the database from the most recent dumpfile in **\_db**, then attempts to activate the development theme
+- **`db:shell`** - Opens a shell to the development WordPress database
+- **`dev`** - Alias for `start`
+- **`mariadb`**, **`mysql`** - Aliases for `db:admin`
+- **`mariadb-dump`**, **`db:dump`**, **`mysql:dump`**, **`mysqldump`** - Aliases for `db:dump`
+- **`mariadb:reload`**, **`mysql:reload`** - Aliases for `db:reload`
+- **`phpmyadmin`** - Alias for `db:admin`
 - **`project:refresh`** - Update the project with the latest tooling.
 - **`pull`**<br>
   Syncs data from a remote server to the local development environment. The bare command will run these sub-commands:
@@ -110,7 +118,6 @@ All `*.sql` files from the top-level **\_db** directory will be in alphabetical 
   - **`pull:uploads-all`** - Syncs down the entire **wp-content/uploads** directory from the remote
 - **`logs:wordpress`** - Stream the WordPress debug.log
 - **`wp-cli`** - Runs [wp-cli](https://wp-cli.org/vc) commands. The default command re-activates the development theme.
-
 
 #### Permissions Repair on macOS
 
@@ -171,7 +178,7 @@ The base image provides a specific version of WordPress, but once running that v
 wp-cli can also be used to update to [pre-release](https://wordpress.org/download/releases/#betas) version of WordPress. An example command looks like this:
 
 ```sh
-npm run wp-cli wp core update https://wordpress.org/wordpress-5.8.1-RC1.zip
+npm run wp-cli wp core update https://wordpress.org/wordpress-6.5-RC3.zip
 ```
 
 Versions can be rolled back by removing the docker `*_wp` volume.
@@ -184,10 +191,15 @@ To update to a pre-release image, enter a valid DockerHub tag into the wp-versio
 
 ### Plugin Development
 
-Projects often rely on plugins which are developed in parallel. Two placeholder environment variables can be used to directly mount plugins into the WordPress environment. This enables better version control and dependency management since the nested and .gitignored **wp-content/plugins** directory often conflicts with the parent theme.
+Projects often rely on plugins which are developed in parallel. A number of placeholder `IOP_DEV_PLUGIN_#` environment variables are provided which can be used to directly mount plugins into the WordPress environment. These enable better version control and dependency management since the nested and .gitignored **wp-content/plugins** directory often conflicts with a parent theme.
 
-- **`DATA_MODEL_PLUGIN`**
-- **`BLOCKS_PLUGIN`**
+To add a development plugin to the WordPress environment, point the plugin's local relative path to an absolute path inside the container. Here's how we would make an **example-plugin** project being developed in a sibling directory available to the current WordPress development environment:
+
+```
+   IOP_DEV_PLUGIN_1="../example-plugin:/var/www/html/wp-content/plugins/example-plugin"
+   IOP_DEV_PLUGIN_2=
+   IOP_DEV_PLUGIN_3=
+```
 
 #### Accessing running containers
 
@@ -331,11 +343,15 @@ Project Root
 
 -->
 
+<!-- START IOP CREDIT BLURB -->
+
 ## &nbsp;
 
 #### Brought to you by IOP
 
-<a href="https://www.ideasonpurpose.com"><img src="https://raw.githubusercontent.com/ideasonpurpose/ideasonpurpose/master/IOP_monogram_circle_512x512_mint.png" height="44" align="top" alt="IOP Logo"></a><img src="https://raw.githubusercontent.com/ideasonpurpose/ideasonpurpose/master/spacer.png" align="middle" width="4" height="54"> This project is actively developed and used in production at <a href="https://www.ideasonpurpose.com">Ideas On Purpose</a>.
+<a href="https://www.ideasonpurpose.com"><img src="https://raw.githubusercontent.com/ideasonpurpose/ideasonpurpose/master/iop-logo-white-on-black-88px.png" height="44" align="top" alt="IOP Logo"></a><img src="https://raw.githubusercontent.com/ideasonpurpose/ideasonpurpose/master/spacer.png" align="middle" width="4" height="54"> This project is actively developed and used in production at <a href="https://www.ideasonpurpose.com">Ideas On Purpose</a>.
+
+<!-- END IOP CREDIT BLURB -->
 
 [basic-wordpress-vagrant]: https://github.com/ideasonpurpose/basic-wordpress-vagrant
 [basic-wordpress-box]: https://github.com/ideasonpurpose/basic-wordpress-box

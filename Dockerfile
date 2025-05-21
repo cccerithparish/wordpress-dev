@@ -1,24 +1,20 @@
+# syntax=docker/dockerfile:1
+# check=skip=SecretsUsedInArgOrEnv
+# Suppresses a Docker warning when setting the WORDPRESS_DB_PASSWORD env var
+
 # Official WordPress image on DockerHub:
 # https://hub.docker.com/_/wordpress/
 # This version is automatically updated by the wordpress:bump script
 # but can also be manually updated for tagged betas and release candidates
 # Manual updates also must change wp-version.json
-FROM wordpress:6.2-php8.0-apache
+FROM wordpress:6.8.1-php8.2-apache
 
-LABEL version="1.0.3"
+LABEL version="1.7.5"
 
 # Add `wp` user and group, then add `www-data` user to `wp` group
 RUN addgroup  --gid 1000 wp \
     && useradd -u 1000 -d /home/wp -g wp -G www-data wp \
     && usermod -a -G wp www-data
-
-# TODO: Leaving these here for now in case something goes wrong
-# All new files should be group-writable
-# TODO: This is likely wrong. Harmless, but wrong.
-# RUN echo 'umask 002' >> /etc/profile.d/set-umask.sh
-
-# # Set global umask in /etc/bashrc
-# RUN echo && echo 'umask 002' >> /etc/bash.bashrc
 
 # Set global umask with pam_umask
 RUN echo >> /etc/pam.d/common-session \
@@ -62,18 +58,26 @@ RUN echo "[OPcache]" > /usr/local/etc/php/conf.d/z_iop-opcache.ini \
     && echo "opcache.fast_shutdown=1" >> /usr/local/etc/php/conf.d/z_iop-opcache.ini
 
 # Install Memcached
+# Note: pecl install will fail without also installing libssl-dev
+#   @link https://serverfault.com/a/1136017/150153
 RUN apt-get update -yqq \
     && apt-get install -y --no-install-recommends \
-        libmemcached-dev \
         zlib1g-dev \
+        libssl-dev \
+        libmemcached-dev \
+    && apt-get autoremove -yqq \
     && rm -rf /var/lib/apt/lists/* \
     && pecl install memcached \
     && docker-php-ext-enable memcached
 
+# Remove 10 MB /usr/src/php.tar.xz file. Unnecessary since we never update PHP without rebuilding.
+# Ref: https://github.com/docker-library/php/issues/488
+RUN rm /usr/src/php.tar.xz /usr/src/php.tar.xz.asc
+
 # Install XDebug, largly copied from:
 # https://github.com/andreccosta/wordpress-xdebug-dockerbuild
 # https://pecl.php.net/package/xdebug
-RUN pecl install xdebug-3.1.2 \
+RUN pecl install xdebug-3.3.2 \
     && docker-php-ext-enable xdebug \
     && echo '[XDebug]' >> /usr/local/etc/php/conf.d/z_iop-xdebug.ini \
     && echo 'zend_extension=xdebug' >> /usr/local/etc/php/conf.d/z_iop-xdebug.ini \
@@ -85,18 +89,23 @@ RUN pecl install xdebug-3.1.2 \
     && echo 'xdebug.client_port = 9003' >> /usr/local/etc/php/conf.d/z_iop-xdebug.ini \
     && echo 'debug.remote_host = host.docker.internal' >> /usr/local/etc/php/conf.d/z_iop-xdebug.ini \
     && rm -rf /tmp/pear
-    # && echo 'xdebug.log = /tmp/xdebug/xdebug.log' >> /usr/local/etc/php/conf.d/z_iop-xdebug.ini \
-    # && echo 'xdebug.log = 10' >> /usr/local/etc/php/conf.d/z_iop-xdebug.ini \
-
-# Remove 10 MB /usr/src/php.tar.xz file. Unnecesary since we never update PHP without rebuilding.
-# Ref: https://github.com/docker-library/php/issues/488
-RUN rm /usr/src/php.tar.xz /usr/src/php.tar.xz.asc
+# && echo 'xdebug.log = /tmp/xdebug/xdebug.log' >> /usr/local/etc/php/conf.d/z_iop-xdebug.ini \
+# && echo 'xdebug.log = 10' >> /usr/local/etc/php/conf.d/z_iop-xdebug.ini \
 
 # Make sure the XDebug profiler directory exists and is writable by www-data
 RUN mkdir -p /tmp/xdebug \
     && chmod -R 777 /tmp/xdebug \
     && chown www-data:www-data /tmp/xdebug
 
+# Install Composer, VarDumper and Kint
+# && composer global require symfony/var-dumper kint-php/kint --no-interaction \
+RUN cd /usr/src \
+    && curl -sS https://getcomposer.org/installer | php \
+    && mv composer.phar /usr/local/bin/composer \
+    && composer require symfony/var-dumper kint-php/kint --no-interaction \
+    && echo 'auto_prepend_file=/usr/src/debug_loader.php' > /usr/local/etc/php/conf.d/z_iop-debug_loader.ini
+
+COPY src/debug_loader.php /usr/src
 
 # Setup alternate WordPress debug.log location in /var/log
 RUN mkdir -p /var/log/wordpress \
@@ -106,21 +115,26 @@ RUN mkdir -p /var/log/wordpress \
 # Install less for wp-cli's pager
 RUN apt-get update -yqq \
     && apt-get install -y less \
+    && apt-get autoremove -yqq \
     && rm -rf /var/lib/apt/lists/*
 
 # Install wp-cli since the native image is a bowl of permissions errors
 RUN curl https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar > /usr/local/bin/wp \
     && chmod +x /usr/local/bin/wp
 
-# Install current node js and global install sort-package-json for the init script
-# Install npm so we can run npx sort-package-json from the init script
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+# Install LTS node.js from nodesource:
+#     https://github.com/nodesource/distributions#installation-instructions
+#     https://github.com/nodejs/release#release-schedule
+# Also global install npm & sort-package-json so we can call them from the init script
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get update -yqq \
     && apt-get install -yqq --no-install-recommends \
         nodejs \
-    && rm -rf /var/lib/apt/lists/* \
     && npm install --global \
         npm \
-        sort-package-json
+        sort-package-json \
+    && apt-get autoremove -yqq \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install rsync, ssh-client and jq for merging tooling and package.json files
 RUN apt-get update -yqq \
@@ -128,16 +142,8 @@ RUN apt-get update -yqq \
         rsync \
         openssh-client \
         jq \
+    && apt-get autoremove -yqq \
     &&  rm -rf /var/lib/apt/lists/*
-
-
-# Install acl, attempting to fix umask permissions issues
-# NOTE: unsupported on this filesystem??
-# RUN apt-get update -yqq \
-#     && apt-get install -y --no-install-recommends \
-#       acl \
-#     && rm -rf /var/lib/apt/lists/*
-
 
 # Setup location for wp user's SSH keys
 RUN mkdir -p /ssh_keys \
@@ -152,11 +158,12 @@ RUN echo >> /etc/ssh/ssh_config \
     && echo "    UserKnownHostsFile /dev/null" >> /etc/ssh/ssh_config \
     && echo "    LogLevel QUIET" >> /etc/ssh/ssh_config
 
-# COPY default.config.js /usr/src/
-COPY src/* /usr/src/
+# COPY wp-config-extra.php to /usr/src/
+COPY src/wp-config-extra.php /usr/src/
 
 # COPY boilerplate-theme/ /usr/src/boilerplate-theme
-COPY boilerplate-tooling/ /usr/src/boilerplate-tooling
+# TODO: Disabled 2025-03 no need, just bloating the image.
+# COPY boilerplate-tooling/ /usr/src/boilerplate-tooling
 
 # Setup Message Of The Day
 COPY motd motd/* /etc/update-motd.d/
@@ -165,15 +172,25 @@ RUN chmod +x /etc/update-motd.d/*
 RUN echo \
     && echo LS_OPTIONS='--color=auto' >> /root/.bashrc \
     && echo run-parts /etc/update-motd.d/ >> /root/.bashrc \
+    && echo alias wp='wp --allow-root' \
     && echo cd /usr/src >> /root/.bashrc
+
+# Install IPTables to workaround WordPress internal requests to external ports
+# This will be used to remap Docker's entire ephemeral port range back to 80
+RUN apt-get update -yqq \
+    && apt-get install -y --no-install-recommends \
+        iptables \
+    && apt-get autoremove -yqq \
+    && rm -rf /var/lib/apt/lists/*
 
 # Network Debugging Tools
 # TODO: Remove or disable if not needed
 RUN apt-get update -yqq \
-    &&  apt-get install -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends \
         iputils-ping \
         dnsutils \
         vim \
+    && apt-get autoremove -yqq \
     &&  rm -rf /var/lib/apt/lists/*
 
 # Copy scripts to /bin and make them executable

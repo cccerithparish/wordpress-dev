@@ -1,15 +1,15 @@
 <?php
 
+$protocol = isset($_SERVER['HTTPS']) ? 'https' : 'http';
+
 /**
  * Extra ideasonpurpose dev settings
  *
  * Since the 5.7 WordPress image, this file is included instead of parsed
  * ref: https://github.com/docker-library/wordpress/commit/891b7108294a629e6cc16c2f4bf643d9475894cc
- *
- * Serve WordPress internally from Docker's internal IP address
  */
-define('WP_HOME', 'http://' . $_SERVER['SERVER_ADDR']);
-define('WP_SITEURL', 'http://' . $_SERVER['SERVER_ADDR']);
+define('WP_HOME', "{$protocol}://{$_SERVER['HTTP_HOST']}");
+define('WP_SITEURL', "{$protocol}://{$_SERVER['HTTP_HOST']}");
 
 /**
  * Enable additional WordPress debugging constants when WP_DEBUG is true
@@ -22,6 +22,11 @@ define('WP_SITEURL', 'http://' . $_SERVER['SERVER_ADDR']);
 if (WP_DEBUG) {
     define('WP_DEBUG_LOG', '/var/log/wordpress/debug.log');
     define('WP_DEBUG_DISPLAY', true);
+    /**
+     * Disable caching of theme-related *.json files
+     * @link https://github.com/ideasonpurpose/docker-wordpress-dev/issues/72
+     */
+    define('WP_DEVELOPMENT_MODE', 'theme');
     define('SCRIPT_DEBUG', true);
     define('SAVEQUERIES', true);
 }
