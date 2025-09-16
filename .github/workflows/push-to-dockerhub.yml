@@ -18,9 +18,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Read latest WordPress version from wp-version.json
+      - name: Put new versions into environment variables
+        id: get_versions
         run: |
-          echo "WP_VERSION=$(jq -r '.wordpress' wp-version.json)" >> $GITHUB_ENV
+          echo "WP_VERSION=$(jq -r '.wordpress' wp-version.json)" >> $GITHUB_OUTPUT
+          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
       - name: Create GitHub release
         if: ${{ contains(github.ref, 'refs/tags/') }}
@@ -55,10 +57,10 @@ jobs:
         with:
           images: ${{ secrets.DOCKER_REPO_NAME }}
           tags: |
-            type=semver,pattern={{version}}
+            type=semver,pattern={{VERSION}}
             type=semver,pattern={{major}}.{{minor}}
-            type=raw,${{ env.WP_VERSION }}-{{version}}
-            type=raw,${{ env.WP_VERSION }}
+            type=raw,value=${{ steps.get_versions.outputs.WP_VERSION }}-${{ steps.get_versions.outputs.VERSION }}
+            type=raw,value=${{ steps.get_versions.outputs.WP_VERSION }}
             type=sha
 
       # https://github.com/docker/build-push-action
