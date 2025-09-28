@@ -1,0 +1,24 @@
+
+{
+    "name": "my-project-devcontainer",
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",  // Any generic, debian-based image.
+    "features": {
+        "ghcr.io/devcontainers/features/go:1":
+        "ghcr.io/devcontainers/features/docker-in-docker:2.2.0": {},
+        "customizations": {
+            "vscode": {
+                "extensions": [
+                    "christian-kohler.npm-intellisense",
+                    "donjayamanne.githistory",
+                    "doppler.doppler-vscode"
+                ]
+            }
+
+        "ghcr.io/devcontainers/features/docker-in-docker:1": {
+            "version": "latest",
+            "moby": true
+          
+   
+        }
+    }
+}

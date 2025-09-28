@@ -3,11 +3,11 @@
   "version": "1.7.8",
   "private": true,
   "description": "Docker-based local development environment for WordPress projects",
-  "repository": "https://github.com/cccerithparish/docker-wordpress-dev",
+  "repository": "https://github.com/cccerithparish/wordpress-dev",
   "license": "MIT",
-  "author": "Ideas On Purpose (https://www.ideasonpurpose.com/)",
+  "author": "MediaRoom CCCErith (https://www.cccerithparish.org/)",
   "contributors": [
-    "Joe Maller <joe@ideasonpurpose.com>"
+    "Webmaster <webmaster@cccerithparish.org>"
   ],
   "scripts": {
     "path": "echo $PATH",

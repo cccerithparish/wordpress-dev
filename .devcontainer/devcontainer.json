@@ -1,19 +1,93 @@
-
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/dotnet
 {
-    "name": "my-project-devcontainer",
-    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",  // Any generic, debian-based image.
-    "features": {
-        "ghcr.io/devcontainers/features/go:1":
-        "ghcr.io/devcontainers/features/docker-in-docker:2.2.0": {}
-}
-        {
-            "version": "1.18"
-        },
-        "ghcr.io/devcontainers/features/docker-in-docker:1": {
-            "version": "latest",
-            "moby": true
-          
-   
-        }
-    }
+	"name": "Wordpress-Dev",
+	"build": {
+		"dockerfile": "./Dockerfile",
+		"context": "."
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-dotnettools.csdevkit",
+				"ms-dotnettools.dotnet-interactive-vscode",
+				"vscode-icons-team.vscode-icons",
+				"humao.rest-client",
+				"42Crunch.vscode-openapi",
+				"stoplight.spectral",
+				"xdebug.php-debug",
+				"googlecloudtools.cloudcode",
+				"Nibs.remote-cloud-shell",
+				"google.geminicodeassist",
+				"GustavoASC.google-drive-vscode",
+				"acebunny00.gemini-cli-launcher",
+				"GitHub.vscode-pull-request-github",
+				"VisualStudioExptTeam.intellicode-api-usage-examples",
+				"bierner.markdown-preview-github-styles",
+				"vscjava.vscode-java-upgrade",
+				"wassimdev.wassimdev-vscode-deepseek",
+				"niudai.remote-github",
+				"Pod212.vscode-github-projects",
+				"OmarTawfik.github-actions-vscode",
+				"henriqueBruno.github-repository-manager",
+				"fabiospampinato.vscode-github-notifications-bell",
+				"ImadIDALIOUALI.vscode-github-trending",
+				"lzm0x219.vscode-markdown-github",
+				"ArthurSudbrackIbarra.grc",
+				"joyceerhl.github-graphql-nb",
+				"RuslanRystsov.github-status",
+				"christian-kohler.npm-intellisense",
+				"ms-vscode.PowerShell",
+				"msazurermtools.azurerm-vscode-tools"
+			],
+			"settings": {
+				"editor.tabSize": 4,
+				"terminal.integrated.fontFamily": "MesloLGM Nerd Font",
+				"terminal.integrated.fontLigatures.enabled": true,
+				"terminal.integrated.defaultProfile.linux": "zsh",
+				"terminal.integrated.profiles.linux": {
+					"zsh": {
+						"path": "/bin/zsh",
+						"icon": "terminal-ubuntu"
+					}
+				}
+			}
+		}
+	},
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	"features": {
+		"ghcr.io/devcontainers/features/common-utils": {
+			"installZsh": true,
+			"installOhMyZsh": true,
+			"installOhMyZshConfig": true,
+			"configureZshAsDefaultShell": true
+		},
+		{
+			"ghcr.io/devcontainers/features/go:1": {
+				"version": "latest"
+			}
+		},
+		{
+			"ghcr.io/devcontainers/features/docker-in-docker:1": {
+				"version": "latest",
+				"moby": true
+			}
+		},
+		"ghcr.io/devcontainers-extra/features/zsh-plugins:0": {
+			"plugins": "zsh-autosuggestions zsh-syntax-highlighting",
+			"omzPlugins": "https://github.com/zsh-users/zsh-autosuggestions.git https://github.com/zsh-users/zsh-syntax-highlighting.git"
+		}
+	},
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	 "forwardPorts": [5000, 5001],
+	 "portsAttributes": {
+			"5001": {
+				"protocol": "https"
+			}
+	 }
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": ".devcontainer/scripts/post-create.sh"
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
 }
