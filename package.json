@@ -1,9 +1,9 @@
 {
-  "name": "docker-wordpress-dev",
+  "name": "wordpress-dev",
   "version": "1.7.8",
   "private": true,
   "description": "Docker-based local development environment for WordPress projects",
-  "repository": "https://github.com/ideasonpurpose/docker-wordpress-dev",
+  "repository": "https://github.com/cccerithparish/docker-wordpress-dev",
   "license": "MIT",
   "author": "Ideas On Purpose (https://www.ideasonpurpose.com/)",
   "contributors": [
