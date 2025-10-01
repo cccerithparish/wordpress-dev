@@ -18,5 +18,6 @@
         "titleBar.inactiveBackground": "#2155bd99",
         "titleBar.inactiveForeground": "#e7e7e799"
     },
-    "peacock.color": "#2155BD"
+    "peacock.color": "#2155BD",
+    "css.format.spaceAroundSelectorSeparator": true
 }
