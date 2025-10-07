@@ -3,7 +3,7 @@
   "version": "1.7.8",
   "private": true,
   "description": "Docker-based local development environment for WordPress projects",
-  "repository": "https://github.com/cccerithparish/docker-wordpress-dev",
+  "repository": "https://github.com/cccerithparish/wordpress-dev",
   "license": "MIT",
   "author": "MediaRoom Developers (https://cccerithparish.org/)",
   "contributors": [
