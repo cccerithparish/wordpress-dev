@@ -5,9 +5,9 @@
   "description": "Docker-based local development environment for WordPress projects",
   "repository": "https://github.com/cccerithparish/docker-wordpress-dev",
   "license": "MIT",
-  "author": "Ideas On Purpose (https://www.ideasonpurpose.com/)",
+  "author": "MediaRoom Developers (https://cccerithparish.org/)",
   "contributors": [
-    "Joe Maller <joe@ideasonpurpose.com>"
+    "Anthony Emmanuel <anthony.e@cccerithparish.org>"
   ],
   "scripts": {
     "path": "echo $PATH",
@@ -16,9 +16,9 @@
     "version": "version-everything && auto-changelog && git add -u",
     "wordpress:bump": "docker compose run --rm bump-wp"
   },
-  "prettier": "@ideasonpurpose/prettier-config",
+  "prettier": "@cccerithparish/prettier-config",
   "devDependencies": {
-    "@ideasonpurpose/prettier-config": "^1.0.1",
+    "@cccerithparish/prettier-config": "^1.0.1",
     "@prettier/plugin-php": "^0.24.0",
     "auto-changelog": "^2.5.0",
     "prettier": "^3.6.2",
@@ -29,7 +29,7 @@
     "backfillLimit": 7
   },
   "version-everything": {
-    "prefix_DISABLED": "ideasonpurpose/wordpress:",
+    "prefix_DISABLED": "cccerithparish/wordpress:",
     "files": [
       "bin/docker-entrypoint-iop.sh",
       "bin/getting-started.sh",
