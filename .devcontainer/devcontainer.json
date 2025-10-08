@@ -38,7 +38,14 @@
 				"RuslanRystsov.github-status",
 				"christian-kohler.npm-intellisense",
 				"ms-vscode.PowerShell",
-				"msazurermtools.azurerm-vscode-tools"
+				"msazurermtools.azurerm-vscode-tools",
+				"GitHub.codespaces",
+				"github.vscode-github-actions",
+				"GitHub.remotehub",
+				"tbbais.wordpress-installer",
+				"ms-azuretools.vscode-azure-mcp-server",
+				"ms-dotnettools.csharp",
+				"microsoft-aspire.aspire-vscode"
 			],
 			"settings": {
 				"editor.tabSize": 4,

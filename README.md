@@ -1,4 +1,4 @@
-# WordPress local development with Docker
+# development with Docker
 
 <h4> 
 Version 1.7.8
